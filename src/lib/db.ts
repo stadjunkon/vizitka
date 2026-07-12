@@ -11,7 +11,21 @@ function init(): Database.Database {
   const database = new Database(path.join(dataDir, "vizitka.db"));
   database.pragma("journal_mode = WAL");
   database.exec(SCHEMA);
+  migrate(database);
   return database;
+}
+
+/** Добавляет недостающие колонки в уже существующую БД (SQLite не умеет ADD COLUMN IF NOT EXISTS). */
+function migrate(database: Database.Database) {
+  const cols = (database.prepare("PRAGMA table_info(profiles)").all() as { name: string }[]).map(
+    (c) => c.name,
+  );
+  if (!cols.includes("profession")) {
+    database.exec("ALTER TABLE profiles ADD COLUMN profession TEXT NOT NULL DEFAULT 'other'");
+  }
+  if (!cols.includes("listed")) {
+    database.exec("ALTER TABLE profiles ADD COLUMN listed INTEGER NOT NULL DEFAULT 1");
+  }
 }
 
 /** Ленивый синглтон — БД открывается только при первом обращении (не на импорте/сборке). */
@@ -35,12 +49,14 @@ const SCHEMA = `
     tagline TEXT NOT NULL DEFAULT '',
     avatar_url TEXT NOT NULL DEFAULT '',
     layout TEXT NOT NULL DEFAULT 'gallery',
+    profession TEXT NOT NULL DEFAULT 'other',
     phone TEXT NOT NULL DEFAULT '',
     whatsapp TEXT NOT NULL DEFAULT '',
     telegram TEXT NOT NULL DEFAULT '',
     vk TEXT NOT NULL DEFAULT '',
     instagram TEXT NOT NULL DEFAULT '',
     published INTEGER NOT NULL DEFAULT 0,
+    listed INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
@@ -58,6 +74,9 @@ const SCHEMA = `
 `;
 
 export type Layout = "gallery" | "cases" | "before_after";
+export type { Profession } from "./professions";
+import type { Profession } from "./professions";
+export { PROFESSIONS, professionLabel } from "./professions";
 
 export interface Work {
   id: string;
@@ -81,14 +100,27 @@ export interface Profile {
   tagline: string;
   avatar_url: string;
   layout: Layout;
+  profession: Profession;
   phone: string;
   whatsapp: string;
   telegram: string;
   vk: string;
   instagram: string;
   published: number;
+  listed: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface GalleryProfile {
+  slug: string;
+  name: string;
+  role_title: string;
+  tagline: string;
+  avatar_url: string;
+  profession: Profession;
+  thumb: string | null;
+  work_count: number;
 }
 
 export function slugify(name: string): string {
@@ -138,4 +170,31 @@ export function getWorksForProfile(profileId: string): Work[] {
   return db
     .prepare("SELECT * FROM works WHERE profile_id = ? ORDER BY sort_order ASC")
     .all(profileId) as Work[];
+}
+
+/** Опубликованные визитки, согласившиеся показываться в общей галерее, с превью-фото. */
+export function getListedProfiles(): GalleryProfile[] {
+  return db
+    .prepare(
+      `SELECT p.slug, p.name, p.role_title, p.tagline, p.avatar_url, p.profession,
+        (SELECT w.image_url FROM works w
+          WHERE w.profile_id = p.id AND w.image_url != ''
+          ORDER BY w.sort_order ASC LIMIT 1) AS thumb,
+        (SELECT COUNT(*) FROM works w WHERE w.profile_id = p.id) AS work_count
+       FROM profiles p
+       WHERE p.published = 1 AND p.listed = 1
+       ORDER BY p.created_at DESC`,
+    )
+    .all() as GalleryProfile[];
+}
+
+export function deleteProfileByToken(token: string): boolean {
+  const profile = getProfileByToken(token);
+  if (!profile) return false;
+  const tx = db.transaction(() => {
+    db.prepare("DELETE FROM works WHERE profile_id = ?").run(profile.id);
+    db.prepare("DELETE FROM profiles WHERE id = ?").run(profile.id);
+  });
+  tx();
+  return true;
 }

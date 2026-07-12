@@ -15,6 +15,8 @@ export interface ProfilePayload {
   tagline: string;
   avatarUrl: string;
   layout: "gallery" | "cases" | "before_after";
+  profession: "beauty" | "photo" | "tutor" | "repair" | "other";
+  listed: boolean;
   phone: string;
   whatsapp: string;
   telegram: string;

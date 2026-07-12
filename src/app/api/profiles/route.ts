@@ -17,9 +17,9 @@ export async function POST(req: NextRequest) {
   const insertProfile = db.prepare(`
     INSERT INTO profiles (
       id, edit_token, slug, name, role_title, bio_raw, bio_polished, tagline,
-      avatar_url, layout, phone, whatsapp, telegram, vk, instagram, published
+      avatar_url, layout, profession, listed, phone, whatsapp, telegram, vk, instagram, published
     ) VALUES (@id, @edit_token, @slug, @name, @role_title, @bio_raw, @bio_polished, @tagline,
-      @avatar_url, @layout, @phone, @whatsapp, @telegram, @vk, @instagram, 1)
+      @avatar_url, @layout, @profession, @listed, @phone, @whatsapp, @telegram, @vk, @instagram, 1)
   `);
 
   const insertWork = db.prepare(`
@@ -39,6 +39,8 @@ export async function POST(req: NextRequest) {
       tagline: body.tagline ?? "",
       avatar_url: body.avatarUrl ?? "",
       layout: body.layout ?? "gallery",
+      profession: body.profession ?? "other",
+      listed: body.listed === false ? 0 : 1,
       phone: body.phone ?? "",
       whatsapp: body.whatsapp ?? "",
       telegram: body.telegram ?? "",

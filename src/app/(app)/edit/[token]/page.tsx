@@ -21,6 +21,8 @@ export default async function EditPage({
     tagline: profile.tagline,
     avatarUrl: profile.avatar_url,
     layout: profile.layout as Layout,
+    profession: profile.profession,
+    listed: profile.listed === 1,
     phone: profile.phone,
     whatsapp: profile.whatsapp,
     telegram: profile.telegram,

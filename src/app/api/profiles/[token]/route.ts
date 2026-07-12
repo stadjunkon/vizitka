@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { db, getProfileByToken, getWorksForProfile } from "@/lib/db";
+import { db, getProfileByToken, getWorksForProfile, deleteProfileByToken } from "@/lib/db";
 import type { ProfilePayload } from "@/lib/types";
 
 export async function GET(
@@ -34,7 +34,8 @@ export async function PATCH(
   const updateProfile = db.prepare(`
     UPDATE profiles SET
       name = @name, role_title = @role_title, bio_raw = @bio_raw, bio_polished = @bio_polished,
-      tagline = @tagline, avatar_url = @avatar_url, layout = @layout, phone = @phone,
+      tagline = @tagline, avatar_url = @avatar_url, layout = @layout, profession = @profession,
+      listed = @listed, phone = @phone,
       whatsapp = @whatsapp, telegram = @telegram, vk = @vk, instagram = @instagram,
       updated_at = datetime('now')
     WHERE id = @id
@@ -56,6 +57,8 @@ export async function PATCH(
       tagline: body.tagline ?? "",
       avatar_url: body.avatarUrl ?? "",
       layout: body.layout ?? "gallery",
+      profession: body.profession ?? "other",
+      listed: body.listed === false ? 0 : 1,
       phone: body.phone ?? "",
       whatsapp: body.whatsapp ?? "",
       telegram: body.telegram ?? "",
@@ -80,4 +83,16 @@ export async function PATCH(
   tx();
 
   return NextResponse.json({ slug: profile.slug });
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ token: string }> }
+) {
+  const { token } = await params;
+  const ok = deleteProfileByToken(token);
+  if (!ok) {
+    return NextResponse.json({ error: "Не найдено" }, { status: 404 });
+  }
+  return NextResponse.json({ deleted: true });
 }

@@ -22,9 +22,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ImageUpload } from "@/components/image-upload";
 import { cn } from "@/lib/utils";
+import { PROFESSIONS } from "@/lib/professions";
+import { rememberVizitka, forgetVizitka } from "@/lib/my-vizitki";
 import type { ProfilePayload } from "@/lib/types";
 
 type Layout = ProfilePayload["layout"];
+type Profession = ProfilePayload["profession"];
 
 interface FormWork {
   category: string;
@@ -70,6 +73,8 @@ function blankState(): PortfolioFormInitial {
     tagline: "",
     avatarUrl: "",
     layout: "gallery",
+    profession: "beauty",
+    listed: true,
     phone: "",
     whatsapp: "",
     telegram: "",
@@ -84,6 +89,7 @@ export function PortfolioForm({ mode, token, initial, initialSlug }: PortfolioFo
   const [form, setForm] = useState<PortfolioFormInitial>(initial ?? blankState());
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [result, setResult] = useState<{ slug: string; editToken: string } | null>(null);
 
   function update<K extends keyof PortfolioFormInitial>(key: K, value: PortfolioFormInitial[K]) {
@@ -165,6 +171,12 @@ export function PortfolioForm({ mode, token, initial, initialSlug }: PortfolioFo
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? "Ошибка сохранения");
+        rememberVizitka({
+          slug: data.slug,
+          editToken: data.editToken,
+          name: form.name,
+          roleTitle: form.roleTitle,
+        });
         setResult(data);
       } else {
         const res = await fetch(`/api/profiles/${token}`, {
@@ -174,6 +186,14 @@ export function PortfolioForm({ mode, token, initial, initialSlug }: PortfolioFo
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? "Ошибка сохранения");
+        if (token) {
+          rememberVizitka({
+            slug: data.slug,
+            editToken: token,
+            name: form.name,
+            roleTitle: form.roleTitle,
+          });
+        }
         toast.success("Изменения сохранены");
         router.push(`/${data.slug}`);
       }
@@ -181,6 +201,22 @@ export function PortfolioForm({ mode, token, initial, initialSlug }: PortfolioFo
       toast.error(err instanceof Error ? err.message : "Не удалось сохранить");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!token) return;
+    if (!window.confirm("Удалить визитку навсегда? Это действие необратимо.")) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/profiles/${token}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Не удалось удалить");
+      forgetVizitka(token);
+      toast.success("Визитка удалена");
+      router.push("/");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Не удалось удалить");
+      setDeleting(false);
     }
   }
 
@@ -246,6 +282,30 @@ export function PortfolioForm({ mode, token, initial, initialSlug }: PortfolioFo
               placeholder="5 лет опыта, работаю с гель-лаком, обучалась у ...  — можно списком, не литературно"
               rows={3}
             />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label>Сфера</Label>
+            <div className="flex flex-wrap gap-2">
+              {PROFESSIONS.map((p) => (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => update("profession", p.value as Profession)}
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-sm transition-colors",
+                    form.profession === p.value
+                      ? "border-primary bg-primary/5 text-foreground ring-1 ring-primary"
+                      : "border-input text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <span className="text-xs text-muted-foreground">
+              Нужно для фильтра в общей галерее.
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -422,6 +482,23 @@ export function PortfolioForm({ mode, token, initial, initialSlug }: PortfolioFo
         </CardContent>
       </Card>
 
+      {/* Галерея opt-in */}
+      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-input bg-card p-4">
+        <input
+          type="checkbox"
+          checked={form.listed}
+          onChange={(e) => update("listed", e.target.checked)}
+          className="mt-0.5 size-4 accent-primary"
+        />
+        <span className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium">Показывать в общей галерее примеров</span>
+          <span className="text-xs text-muted-foreground">
+            Ваша визитка появится на главной странице vizitka.me. Выключите, если хотите держать
+            ссылку только для себя — страница всё равно открывается по прямой ссылке.
+          </span>
+        </span>
+      </label>
+
       <div className="flex items-center gap-3">
         <Button onClick={handleSave} disabled={saving} size="lg" className="flex-1">
           {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
@@ -438,6 +515,21 @@ export function PortfolioForm({ mode, token, initial, initialSlug }: PortfolioFo
           </Link>
         )}
       </div>
+
+      {mode === "edit" && (
+        <div className="flex justify-center pt-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="text-muted-foreground hover:text-destructive"
+          >
+            {deleting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+            Удалить визитку
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
