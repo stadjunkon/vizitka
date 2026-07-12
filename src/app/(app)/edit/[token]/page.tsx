@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getProfileByToken, getWorksForProfile, type Layout } from "@/lib/db";
+import { getProfileByToken, getWorksForProfile, workImages, type Layout } from "@/lib/db";
 import { PortfolioForm, type PortfolioFormInitial } from "@/components/portfolio-form";
 
 export default async function EditPage({
@@ -41,6 +41,7 @@ export default async function EditPage({
             category: w.category,
             imageUrl: w.image_url,
             afterImageUrl: w.after_image_url,
+            images: workImages(w),
             descriptionRaw: w.description_raw,
             descriptionPolished: w.description_polished,
           }))
@@ -49,6 +50,7 @@ export default async function EditPage({
               category: "",
               imageUrl: "",
               afterImageUrl: "",
+              images: [],
               descriptionRaw: "",
               descriptionPolished: "",
             },

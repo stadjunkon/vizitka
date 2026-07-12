@@ -43,8 +43,8 @@ export async function PATCH(
   `);
 
   const insertWork = db.prepare(`
-    INSERT INTO works (id, profile_id, category, image_url, after_image_url, description_raw, description_polished, sort_order)
-    VALUES (@id, @profile_id, @category, @image_url, @after_image_url, @description_raw, @description_polished, @sort_order)
+    INSERT INTO works (id, profile_id, category, image_url, after_image_url, images, description_raw, description_polished, sort_order)
+    VALUES (@id, @profile_id, @category, @image_url, @after_image_url, @images, @description_raw, @description_polished, @sort_order)
   `);
   const deleteWorks = db.prepare("DELETE FROM works WHERE profile_id = ?");
 
@@ -76,12 +76,14 @@ export async function PATCH(
 
     deleteWorks.run(profile.id);
     body.works.forEach((w, i) => {
+      const images = Array.isArray(w.images) ? w.images.filter(Boolean) : [];
       insertWork.run({
         id: randomUUID(),
         profile_id: profile.id,
         category: w.category ?? "",
-        image_url: w.imageUrl ?? "",
+        image_url: w.imageUrl || images[0] || "",
         after_image_url: w.afterImageUrl ?? "",
+        images: JSON.stringify(images),
         description_raw: w.descriptionRaw ?? "",
         description_polished: w.descriptionPolished ?? "",
         sort_order: i,

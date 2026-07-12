@@ -1,18 +1,19 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Images } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface WorkView {
   id: string;
   category: string;
-  imageUrl: string;
+  images: string[];
   afterImageUrl: string;
   description: string;
 }
 
 type Layout = "gallery" | "cases" | "before_after";
+type OpenFn = (images: string[], index: number) => void;
 
 export function PublicWorks({ works, layout }: { works: WorkView[]; layout: Layout }) {
   const categories = useMemo(() => {
@@ -24,20 +25,10 @@ export function PublicWorks({ works, layout }: { works: WorkView[]; layout: Layo
   const [active, setActive] = useState<string>("all");
   const filtered = active === "all" ? works : works.filter((w) => w.category === active);
 
-  // Плоский список фото для просмотра (lightbox) — в порядке отображения.
-  const images = useMemo(() => {
-    const arr: string[] = [];
-    for (const w of filtered) {
-      if (w.imageUrl) arr.push(w.imageUrl);
-      if (layout === "before_after" && w.afterImageUrl) arr.push(w.afterImageUrl);
-    }
-    return arr;
-  }, [filtered, layout]);
-
-  const [lightbox, setLightbox] = useState<number | null>(null);
-  const open = useCallback((src: string) => {
-    setLightbox(images.indexOf(src));
-  }, [images]);
+  const [box, setBox] = useState<{ images: string[]; index: number } | null>(null);
+  const open: OpenFn = useCallback((images, index) => {
+    if (images.filter(Boolean).length) setBox({ images: images.filter(Boolean), index });
+  }, []);
 
   return (
     <section className="flex flex-col gap-5">
@@ -58,27 +49,19 @@ export function PublicWorks({ works, layout }: { works: WorkView[]; layout: Layo
       {layout === "cases" && <Cases works={filtered} onOpen={open} />}
       {layout === "before_after" && <BeforeAfter works={filtered} onOpen={open} />}
 
-      {lightbox !== null && images[lightbox] && (
+      {box && (
         <Lightbox
-          images={images}
-          index={lightbox}
-          onClose={() => setLightbox(null)}
-          onIndex={setLightbox}
+          images={box.images}
+          index={box.index}
+          onClose={() => setBox(null)}
+          onIndex={(i) => setBox({ ...box, index: i })}
         />
       )}
     </section>
   );
 }
 
-function CatChip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
+function CatChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"
@@ -95,25 +78,48 @@ function CatChip({
   );
 }
 
-function Thumb({ src, alt, onOpen, className }: { src: string; alt: string; onOpen: (s: string) => void; className?: string }) {
+/** Обложка работы + значок «+N», если в альбоме несколько фото. */
+function Cover({
+  images,
+  alt,
+  onOpen,
+  className,
+}: {
+  images: string[];
+  alt: string;
+  onOpen: OpenFn;
+  className?: string;
+}) {
+  const cover = images[0];
+  if (!cover) return null;
   return (
-    <button type="button" onClick={() => onOpen(src)} className={cn("group block overflow-hidden", className)}>
+    <button
+      type="button"
+      onClick={() => onOpen(images, 0)}
+      className={cn("group relative block overflow-hidden", className)}
+    >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={src}
+        src={cover}
         alt={alt}
         className="h-full w-full cursor-zoom-in object-cover transition-transform duration-300 group-hover:scale-[1.03]"
       />
+      {images.length > 1 && (
+        <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-xs font-medium text-white">
+          <Images className="size-3.5" />
+          {images.length}
+        </span>
+      )}
     </button>
   );
 }
 
-function Gallery({ works, onOpen }: { works: WorkView[]; onOpen: (s: string) => void }) {
+function Gallery({ works, onOpen }: { works: WorkView[]; onOpen: OpenFn }) {
   return (
     <div className="grid grid-cols-2 gap-3">
       {works.map((w) => (
         <figure key={w.id} className="flex flex-col gap-2">
-          {w.imageUrl && <Thumb src={w.imageUrl} alt={w.category} onOpen={onOpen} className="aspect-square w-full rounded-xl" />}
+          <Cover images={w.images} alt={w.category} onOpen={onOpen} className="aspect-square w-full rounded-xl" />
           {(w.category || w.description) && (
             <figcaption className="flex flex-col gap-0.5">
               {w.category && <span className="text-sm font-medium">{w.category}</span>}
@@ -126,14 +132,12 @@ function Gallery({ works, onOpen }: { works: WorkView[]; onOpen: (s: string) => 
   );
 }
 
-function Cases({ works, onOpen }: { works: WorkView[]; onOpen: (s: string) => void }) {
+function Cases({ works, onOpen }: { works: WorkView[]; onOpen: OpenFn }) {
   return (
     <div className="flex flex-col gap-4">
       {works.map((w) => (
         <article key={w.id} className="flex flex-col gap-4 rounded-xl border bg-card p-4 sm:flex-row">
-          {w.imageUrl && (
-            <Thumb src={w.imageUrl} alt={w.category} onOpen={onOpen} className="aspect-video w-full shrink-0 rounded-lg sm:w-40" />
-          )}
+          <Cover images={w.images} alt={w.category} onOpen={onOpen} className="aspect-video w-full shrink-0 rounded-lg sm:w-40" />
           <div className="flex flex-col gap-1.5">
             {w.category && <h3 className="font-medium">{w.category}</h3>}
             {w.description && <p className="text-sm leading-relaxed text-muted-foreground">{w.description}</p>}
@@ -144,28 +148,39 @@ function Cases({ works, onOpen }: { works: WorkView[]; onOpen: (s: string) => vo
   );
 }
 
-function BeforeAfter({ works, onOpen }: { works: WorkView[]; onOpen: (s: string) => void }) {
+function BeforeAfter({ works, onOpen }: { works: WorkView[]; onOpen: OpenFn }) {
   return (
     <div className="flex flex-col gap-6">
-      {works.map((w) => (
-        <article key={w.id} className="flex flex-col gap-2">
-          {w.category && <h3 className="font-medium">{w.category}</h3>}
-          <div className="grid grid-cols-2 gap-2">
-            <BAImage src={w.imageUrl} label="До" onOpen={onOpen} />
-            <BAImage src={w.afterImageUrl} label="После" onOpen={onOpen} />
-          </div>
-          {w.description && <p className="text-sm leading-relaxed text-muted-foreground">{w.description}</p>}
-        </article>
-      ))}
+      {works.map((w) => {
+        const before = w.images[0] ?? "";
+        const pair = [before, w.afterImageUrl].filter(Boolean);
+        return (
+          <article key={w.id} className="flex flex-col gap-2">
+            {w.category && <h3 className="font-medium">{w.category}</h3>}
+            <div className="grid grid-cols-2 gap-2">
+              <BAImage src={before} label="До" onClick={() => onOpen(pair, 0)} />
+              <BAImage
+                src={w.afterImageUrl}
+                label="После"
+                onClick={() => onOpen(pair, before ? 1 : 0)}
+              />
+            </div>
+            {w.description && <p className="text-sm leading-relaxed text-muted-foreground">{w.description}</p>}
+          </article>
+        );
+      })}
     </div>
   );
 }
 
-function BAImage({ src, label, onOpen }: { src: string; label: string; onOpen: (s: string) => void }) {
+function BAImage({ src, label, onClick }: { src: string; label: string; onClick: () => void }) {
   return (
     <div className="relative overflow-hidden rounded-xl">
       {src ? (
-        <Thumb src={src} alt={label} onOpen={onOpen} className="aspect-square w-full" />
+        <button type="button" onClick={onClick} className="group block aspect-square w-full overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={src} alt={label} className="h-full w-full cursor-zoom-in object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+        </button>
       ) : (
         <div className="flex aspect-square w-full items-center justify-center bg-muted text-xs text-muted-foreground">
           нет фото
@@ -207,10 +222,7 @@ function Lightbox({
   }, [onClose, prev, next]);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={onClose}>
       <button
         type="button"
         onClick={onClose}

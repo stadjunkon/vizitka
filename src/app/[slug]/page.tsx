@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
-import { getProfileBySlug, getWorksForProfile } from "@/lib/db";
+import { getProfileBySlug, getWorksForProfile, workImages } from "@/lib/db";
 import { buildContacts } from "@/lib/contacts";
 import { Nav } from "@/components/nav";
 import { ShareButton } from "@/components/share-button";
@@ -15,9 +15,29 @@ export async function generateMetadata({
   const { slug } = await params;
   const profile = getProfileBySlug(slug);
   if (!profile) return { title: "Не найдено" };
+
+  const h = await headers();
+  const host = h.get("host") ?? "vizitka.me";
+  const proto = h.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
+  const title = `${profile.name} — ${profile.role_title}`;
+  const description = profile.tagline || profile.bio_polished || profile.bio_raw || undefined;
+
   return {
-    title: `${profile.name} — ${profile.role_title}`,
-    description: profile.tagline || profile.bio_polished || profile.bio_raw || undefined,
+    metadataBase: new URL(`${proto}://${host}`),
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "profile",
+      url: `/${slug}`,
+      siteName: "vizitka.me",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
   };
 }
 
@@ -36,7 +56,7 @@ export default async function PublicPage({
   const works: WorkView[] = worksRaw.map((w) => ({
     id: w.id,
     category: w.category,
-    imageUrl: w.image_url,
+    images: workImages(w),
     afterImageUrl: w.after_image_url,
     description: w.description_polished || w.description_raw,
   }));

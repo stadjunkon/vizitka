@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ImageUpload } from "@/components/image-upload";
+import { MultiImageUpload } from "@/components/multi-image-upload";
 import { cn } from "@/lib/utils";
 import { PROFESSIONS } from "@/lib/professions";
 import { CONTACT_TYPES } from "@/lib/contacts";
@@ -34,6 +35,7 @@ interface FormWork {
   category: string;
   imageUrl: string;
   afterImageUrl: string;
+  images: string[];
   descriptionRaw: string;
   descriptionPolished: string;
 }
@@ -60,6 +62,7 @@ function emptyWork(): FormWork {
     category: "",
     imageUrl: "",
     afterImageUrl: "",
+    images: [],
     descriptionRaw: "",
     descriptionPolished: "",
   };
@@ -370,25 +373,26 @@ export function PortfolioForm({ mode, token, initial, initialSlug }: PortfolioFo
                 )}
               </div>
 
-              <div
-                className={cn(
-                  "grid gap-3",
-                  form.layout === "before_after" ? "grid-cols-2" : "grid-cols-1",
-                )}
-              >
-                <ImageUpload
-                  value={work.imageUrl}
-                  onChange={(url) => updateWork(i, { imageUrl: url })}
-                  label={form.layout === "before_after" ? "До" : undefined}
-                />
-                {form.layout === "before_after" && (
+              {form.layout === "before_after" ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <ImageUpload
+                    value={work.imageUrl}
+                    onChange={(url) => updateWork(i, { imageUrl: url })}
+                    label="До"
+                  />
                   <ImageUpload
                     value={work.afterImageUrl}
                     onChange={(url) => updateWork(i, { afterImageUrl: url })}
                     label="После"
                   />
-                )}
-              </div>
+                </div>
+              ) : (
+                <MultiImageUpload
+                  value={work.images}
+                  onChange={(urls) => updateWork(i, { images: urls })}
+                  label="Фото работы — можно несколько"
+                />
+              )}
 
               <div className="flex flex-col gap-1.5">
                 <Label>Категория / тип работы</Label>

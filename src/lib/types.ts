@@ -3,6 +3,7 @@ export interface WorkPayload {
   category: string;
   imageUrl: string;
   afterImageUrl: string;
+  images: string[];
   descriptionRaw: string;
   descriptionPolished: string;
 }

@@ -31,6 +31,12 @@ function migrate(database: Database.Database) {
       database.exec(`ALTER TABLE profiles ADD COLUMN ${c} TEXT NOT NULL DEFAULT ''`);
     }
   }
+  const workCols = (database.prepare("PRAGMA table_info(works)").all() as { name: string }[]).map(
+    (c) => c.name,
+  );
+  if (!workCols.includes("images")) {
+    database.exec("ALTER TABLE works ADD COLUMN images TEXT NOT NULL DEFAULT '[]'");
+  }
 }
 
 /** Ленивый синглтон — БД открывается только при первом обращении (не на импорте/сборке). */
@@ -79,6 +85,7 @@ const SCHEMA = `
     category TEXT NOT NULL DEFAULT '',
     image_url TEXT NOT NULL DEFAULT '',
     after_image_url TEXT NOT NULL DEFAULT '',
+    images TEXT NOT NULL DEFAULT '[]',
     description_raw TEXT NOT NULL DEFAULT '',
     description_polished TEXT NOT NULL DEFAULT '',
     sort_order INTEGER NOT NULL DEFAULT 0
@@ -96,9 +103,21 @@ export interface Work {
   category: string;
   image_url: string;
   after_image_url: string;
+  images: string; // JSON-массив URL-ов (альбом работы)
   description_raw: string;
   description_polished: string;
   sort_order: number;
+}
+
+/** Разбирает JSON-альбом работы; фолбэк на image_url для старых записей. */
+export function workImages(w: Work): string[] {
+  try {
+    const arr = JSON.parse(w.images || "[]");
+    if (Array.isArray(arr) && arr.length > 0) return arr.filter((x) => typeof x === "string" && x);
+  } catch {
+    /* ignore */
+  }
+  return w.image_url ? [w.image_url] : [];
 }
 
 export interface Profile {
