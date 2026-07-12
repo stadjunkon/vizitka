@@ -26,6 +26,11 @@ function migrate(database: Database.Database) {
   if (!cols.includes("listed")) {
     database.exec("ALTER TABLE profiles ADD COLUMN listed INTEGER NOT NULL DEFAULT 1");
   }
+  for (const c of ["viber", "odnoklassniki", "tiktok", "youtube", "facebook", "email", "website"]) {
+    if (!cols.includes(c)) {
+      database.exec(`ALTER TABLE profiles ADD COLUMN ${c} TEXT NOT NULL DEFAULT ''`);
+    }
+  }
 }
 
 /** Ленивый синглтон — БД открывается только при первом обращении (не на импорте/сборке). */
@@ -53,8 +58,15 @@ const SCHEMA = `
     phone TEXT NOT NULL DEFAULT '',
     whatsapp TEXT NOT NULL DEFAULT '',
     telegram TEXT NOT NULL DEFAULT '',
+    viber TEXT NOT NULL DEFAULT '',
     vk TEXT NOT NULL DEFAULT '',
+    odnoklassniki TEXT NOT NULL DEFAULT '',
     instagram TEXT NOT NULL DEFAULT '',
+    tiktok TEXT NOT NULL DEFAULT '',
+    youtube TEXT NOT NULL DEFAULT '',
+    facebook TEXT NOT NULL DEFAULT '',
+    email TEXT NOT NULL DEFAULT '',
+    website TEXT NOT NULL DEFAULT '',
     published INTEGER NOT NULL DEFAULT 0,
     listed INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -104,8 +116,15 @@ export interface Profile {
   phone: string;
   whatsapp: string;
   telegram: string;
+  viber: string;
   vk: string;
+  odnoklassniki: string;
   instagram: string;
+  tiktok: string;
+  youtube: string;
+  facebook: string;
+  email: string;
+  website: string;
   published: number;
   listed: number;
   created_at: string;

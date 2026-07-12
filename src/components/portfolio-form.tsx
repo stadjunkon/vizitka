@@ -23,6 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { ImageUpload } from "@/components/image-upload";
 import { cn } from "@/lib/utils";
 import { PROFESSIONS } from "@/lib/professions";
+import { CONTACT_TYPES } from "@/lib/contacts";
 import { rememberVizitka, forgetVizitka } from "@/lib/my-vizitki";
 import type { ProfilePayload } from "@/lib/types";
 
@@ -78,8 +79,15 @@ function blankState(): PortfolioFormInitial {
     phone: "",
     whatsapp: "",
     telegram: "",
+    viber: "",
     vk: "",
+    odnoklassniki: "",
     instagram: "",
+    tiktok: "",
+    youtube: "",
+    facebook: "",
+    email: "",
+    website: "",
     works: [emptyWork()],
   };
 }
@@ -416,11 +424,22 @@ export function PortfolioForm({ mode, token, initial, initialSlug }: PortfolioFo
           <CardTitle>Контакты и соцсети</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <ContactField label="Телефон" value={form.phone} onChange={(v) => update("phone", v)} placeholder="+7 700 000 00 00" />
-          <ContactField label="WhatsApp" value={form.whatsapp} onChange={(v) => update("whatsapp", v)} placeholder="+7 700 000 00 00" />
-          <ContactField label="Telegram" value={form.telegram} onChange={(v) => update("telegram", v)} placeholder="@username" />
-          <ContactField label="VK" value={form.vk} onChange={(v) => update("vk", v)} placeholder="vk.com/username" />
-          <ContactField label="Instagram" value={form.instagram} onChange={(v) => update("instagram", v)} placeholder="@username" />
+          {CONTACT_TYPES.map((c) => {
+            const Icon = c.icon;
+            return (
+              <div key={c.key} className="flex flex-col gap-1.5">
+                <Label className="flex items-center gap-1.5">
+                  <Icon className="size-3.5 text-muted-foreground" />
+                  {c.label}
+                </Label>
+                <Input
+                  value={form[c.key]}
+                  onChange={(e) => update(c.key, e.target.value)}
+                  placeholder={c.placeholder}
+                />
+              </div>
+            );
+          })}
         </CardContent>
       </Card>
 
@@ -530,25 +549,6 @@ export function PortfolioForm({ mode, token, initial, initialSlug }: PortfolioFo
           </Button>
         </div>
       )}
-    </div>
-  );
-}
-
-function ContactField({
-  label,
-  value,
-  onChange,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label>{label}</Label>
-      <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
     </div>
   );
 }

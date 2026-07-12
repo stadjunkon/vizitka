@@ -17,9 +17,13 @@ export async function POST(req: NextRequest) {
   const insertProfile = db.prepare(`
     INSERT INTO profiles (
       id, edit_token, slug, name, role_title, bio_raw, bio_polished, tagline,
-      avatar_url, layout, profession, listed, phone, whatsapp, telegram, vk, instagram, published
+      avatar_url, layout, profession, listed,
+      phone, whatsapp, telegram, viber, vk, odnoklassniki, instagram, tiktok, youtube, facebook, email, website,
+      published
     ) VALUES (@id, @edit_token, @slug, @name, @role_title, @bio_raw, @bio_polished, @tagline,
-      @avatar_url, @layout, @profession, @listed, @phone, @whatsapp, @telegram, @vk, @instagram, 1)
+      @avatar_url, @layout, @profession, @listed,
+      @phone, @whatsapp, @telegram, @viber, @vk, @odnoklassniki, @instagram, @tiktok, @youtube, @facebook, @email, @website,
+      1)
   `);
 
   const insertWork = db.prepare(`
@@ -44,8 +48,15 @@ export async function POST(req: NextRequest) {
       phone: body.phone ?? "",
       whatsapp: body.whatsapp ?? "",
       telegram: body.telegram ?? "",
+      viber: body.viber ?? "",
       vk: body.vk ?? "",
+      odnoklassniki: body.odnoklassniki ?? "",
       instagram: body.instagram ?? "",
+      tiktok: body.tiktok ?? "",
+      youtube: body.youtube ?? "",
+      facebook: body.facebook ?? "",
+      email: body.email ?? "",
+      website: body.website ?? "",
     });
 
     body.works.forEach((w, i) => {

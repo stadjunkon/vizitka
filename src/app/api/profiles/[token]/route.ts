@@ -35,8 +35,9 @@ export async function PATCH(
     UPDATE profiles SET
       name = @name, role_title = @role_title, bio_raw = @bio_raw, bio_polished = @bio_polished,
       tagline = @tagline, avatar_url = @avatar_url, layout = @layout, profession = @profession,
-      listed = @listed, phone = @phone,
-      whatsapp = @whatsapp, telegram = @telegram, vk = @vk, instagram = @instagram,
+      listed = @listed, phone = @phone, whatsapp = @whatsapp, telegram = @telegram,
+      viber = @viber, vk = @vk, odnoklassniki = @odnoklassniki, instagram = @instagram,
+      tiktok = @tiktok, youtube = @youtube, facebook = @facebook, email = @email, website = @website,
       updated_at = datetime('now')
     WHERE id = @id
   `);
@@ -62,8 +63,15 @@ export async function PATCH(
       phone: body.phone ?? "",
       whatsapp: body.whatsapp ?? "",
       telegram: body.telegram ?? "",
+      viber: body.viber ?? "",
       vk: body.vk ?? "",
+      odnoklassniki: body.odnoklassniki ?? "",
       instagram: body.instagram ?? "",
+      tiktok: body.tiktok ?? "",
+      youtube: body.youtube ?? "",
+      facebook: body.facebook ?? "",
+      email: body.email ?? "",
+      website: body.website ?? "",
     });
 
     deleteWorks.run(profile.id);

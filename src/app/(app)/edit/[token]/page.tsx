@@ -26,8 +26,15 @@ export default async function EditPage({
     phone: profile.phone,
     whatsapp: profile.whatsapp,
     telegram: profile.telegram,
+    viber: profile.viber,
     vk: profile.vk,
+    odnoklassniki: profile.odnoklassniki,
     instagram: profile.instagram,
+    tiktok: profile.tiktok,
+    youtube: profile.youtube,
+    facebook: profile.facebook,
+    email: profile.email,
+    website: profile.website,
     works:
       works.length > 0
         ? works.map((w) => ({

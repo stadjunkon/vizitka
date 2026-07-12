@@ -20,7 +20,14 @@ export interface ProfilePayload {
   phone: string;
   whatsapp: string;
   telegram: string;
+  viber: string;
   vk: string;
+  odnoklassniki: string;
   instagram: string;
+  tiktok: string;
+  youtube: string;
+  facebook: string;
+  email: string;
+  website: string;
   works: WorkPayload[];
 }
