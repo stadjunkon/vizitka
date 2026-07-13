@@ -40,6 +40,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   const profession = profile ? professionLabel(profile.profession) : "";
 
   const fontRegular = readFont("inter-cyrillic-400-normal.woff");
+  const fontMedium = readFont("inter-cyrillic-600-normal.woff");
   const fontBold = readFont("inter-cyrillic-700-normal.woff");
 
   return new ImageResponse(
@@ -51,72 +52,93 @@ export default async function Image({ params }: { params: Promise<{ slug: string
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "#FBFAF8",
+          background: "#FAFAFA",
           padding: "72px",
           fontFamily: "Inter",
+          position: "relative",
         }}
       >
+        {/* призрачный водяной знак */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: -42,
+            left: 0,
+            right: 0,
+            display: "flex",
+            justifyContent: "center",
+            fontSize: 230,
+            fontWeight: 700,
+            letterSpacing: "-0.04em",
+            color: "#EFEFEE",
+          }}
+        >
+          VIZITKA
+        </div>
+
         <div style={{ display: "flex", alignItems: "center", gap: "48px" }}>
           {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={avatar}
-              width={240}
-              height={240}
-              style={{ width: 240, height: 240, borderRadius: 240, objectFit: "cover" }}
+              width={230}
+              height={230}
+              style={{ width: 230, height: 230, borderRadius: 230, objectFit: "cover" }}
             />
           ) : (
             <div
               style={{
-                width: 240,
-                height: 240,
-                borderRadius: 240,
-                background: "#EFE7EC",
-                color: "#C42B6B",
+                width: 230,
+                height: 230,
+                borderRadius: 230,
+                background: "#EFEFEE",
+                color: "#868A8F",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: 120,
-                fontWeight: 700,
+                fontSize: 110,
+                fontWeight: 600,
               }}
             >
               {name.charAt(0)}
             </div>
           )}
 
-          <div style={{ display: "flex", flexDirection: "column", maxWidth: 720 }}>
+          <div style={{ display: "flex", flexDirection: "column", maxWidth: 740 }}>
             {profession && (
               <div
                 style={{
                   display: "flex",
                   alignSelf: "flex-start",
-                  background: "#F3E1EA",
-                  color: "#C42B6B",
-                  padding: "8px 20px",
+                  background: "#FFFFFF",
+                  color: "#868A8F",
+                  padding: "9px 22px",
                   borderRadius: 999,
-                  fontSize: 26,
+                  fontSize: 24,
                   fontWeight: 600,
-                  marginBottom: 20,
+                  marginBottom: 22,
+                  boxShadow: "0 6px 24px rgba(0,0,0,0.07)",
                 }}
               >
                 {profession}
               </div>
             )}
-            <div style={{ fontSize: 72, fontWeight: 700, color: "#1C1A1E", lineHeight: 1.05 }}>
+            <div style={{ fontSize: 68, fontWeight: 600, color: "#171717", lineHeight: 1.06, letterSpacing: "-0.02em" }}>
               {name}
             </div>
-            <div style={{ fontSize: 38, color: "#6B6570", marginTop: 8 }}>{role}</div>
+            <div style={{ fontSize: 34, color: "#868A8F", marginTop: 10 }}>{role}</div>
             {tagline && (
-              <div style={{ fontSize: 30, color: "#8A8590", marginTop: 20, lineHeight: 1.3 }}>
+              <div style={{ fontSize: 28, color: "#3A3D42", marginTop: 22, lineHeight: 1.32 }}>
                 {tagline.length > 90 ? tagline.slice(0, 90) + "…" : tagline}
               </div>
             )}
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-          <div style={{ display: "flex", fontSize: 30, fontWeight: 700, color: "#1C1A1E" }}>
-            vizitka<span style={{ color: "#C42B6B" }}>.me</span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", fontSize: 44, color: "#C9CDD1", fontWeight: 700 }}>*</div>
+          <div style={{ display: "flex", alignItems: "flex-start", fontSize: 27, fontWeight: 700, letterSpacing: "0.01em", color: "#171717" }}>
+            VIZITKA<span style={{ fontSize: 15, color: "#868A8F", marginTop: 1, marginLeft: 2 }}>®</span>
           </div>
         </div>
       </div>
@@ -125,6 +147,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
       ...size,
       fonts: [
         { name: "Inter", data: fontRegular, weight: 400, style: "normal" },
+        { name: "Inter", data: fontMedium, weight: 600, style: "normal" },
         { name: "Inter", data: fontBold, weight: 700, style: "normal" },
       ],
     },

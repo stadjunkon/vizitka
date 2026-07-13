@@ -2,6 +2,7 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { GalleryGrid } from "@/components/gallery-grid";
 import { getListedProfiles } from "@/lib/db";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -9,37 +10,49 @@ export default function Home() {
   const profiles = getListedProfiles();
 
   return (
-    <div className="min-h-full bg-muted/20">
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-4 py-12 sm:py-16">
-        <section className="flex flex-col items-center gap-5 text-center">
-          <h1 className="max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
-            Портфолио мастеров, собранное за 5 минут
+    <div className="relative min-h-full overflow-hidden">
+      <div aria-hidden className="ghost-mark top-24 sm:top-16">
+        VIZITKA
+      </div>
+
+      <main className="relative mx-auto flex w-full max-w-5xl flex-col gap-14 px-4 pb-20 pt-20 sm:pt-28">
+        <section className="flex flex-col items-center gap-6 text-center">
+          <p className="text-xs font-medium tracking-[0.14em] text-muted-foreground">
+            ✳ ПОРТФОЛИО ЗА 5 МИНУТ
+          </p>
+          <h1 className="max-w-xl text-[27px] font-medium leading-snug tracking-[-0.015em] sm:text-[32px]">
+            <span className="text-azure">Vizitka®</span> помогает мастерам показывать работы —
+            просто и красиво
           </h1>
-          <p className="max-w-xl text-muted-foreground">
-            Вместо разрозненных фото в WhatsApp и хайлайтах — одна аккуратная страница.
-            Вводите тезисы, ИИ помогает оформить, а финал всегда за вами.
+          <p className="max-w-md text-[15px] leading-relaxed text-muted-foreground">
+            Фото, пара строк, контакты — страница собирается за пять минут.
+            Остальное — воздух.
           </p>
           <Link
             href="/create"
-            className={buttonVariants({ size: "lg", className: "h-12 px-8 text-base" })}
+            className={cn(buttonVariants({ size: "lg" }), "h-11 px-7 text-[15px]")}
           >
-            Создать свою визитку
+            Создать визитку
           </Link>
         </section>
 
-        <section className="flex flex-col gap-5">
+        <section className="flex flex-col gap-6">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-lg font-semibold tracking-tight">Примеры визиток</h2>
+            <h2 className="text-sm font-[550] tracking-[0.01em] text-foreground">
+              Примеры визиток
+            </h2>
             {profiles.length > 0 && (
-              <span className="text-sm text-muted-foreground">{profiles.length} в галерее</span>
+              <span className="text-xs tabular-nums text-muted-foreground">
+                {profiles.length} в галерее
+              </span>
             )}
           </div>
 
           {profiles.length === 0 ? (
-            <div className="rounded-xl border border-dashed bg-card py-16 text-center">
+            <div className="rounded-2xl border border-dashed bg-card py-16 text-center">
               <p className="text-sm text-muted-foreground">
                 Пока пусто. Будьте первым —{" "}
-                <Link href="/create" className="font-medium text-primary hover:underline">
+                <Link href="/create" className="font-medium text-azure hover:underline">
                   создайте визитку
                 </Link>
                 .

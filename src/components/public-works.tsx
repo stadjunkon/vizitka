@@ -67,10 +67,10 @@ function CatChip({ active, onClick, children }: { active: boolean; onClick: () =
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-full border px-3.5 py-1.5 text-sm transition-colors",
+        "rounded-full border px-3.5 py-1.5 text-[13px] transition-colors",
         active
-          ? "border-primary bg-primary/5 text-foreground ring-1 ring-primary"
-          : "border-input text-muted-foreground hover:bg-muted",
+          ? "border-foreground/60 bg-card text-foreground"
+          : "border-transparent text-muted-foreground hover:text-foreground",
       )}
     >
       {children}

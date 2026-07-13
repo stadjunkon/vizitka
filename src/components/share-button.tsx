@@ -57,7 +57,7 @@ export function ShareButton({ url, name }: { url: string; name: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 rounded-full border border-input bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
+        className="flex items-center gap-1.5 rounded-full bg-card px-5 py-2.5 text-sm font-medium shadow-[0_8px_28px_rgba(0,0,0,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_12px_34px_rgba(0,0,0,0.11)]"
       >
         <Share2 className="size-4" />
         Поделиться

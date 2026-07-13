@@ -35,12 +35,12 @@ export function GalleryGrid({ profiles }: { profiles: GalleryProfile[] }) {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Поиск по имени или роду занятий"
-            className="pl-9"
+            className="h-11 rounded-full border-transparent bg-card pl-11 shadow-[0_8px_28px_rgba(0,0,0,0.06)]"
           />
         </div>
 
@@ -89,10 +89,10 @@ function FilterChip({
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded-full border px-3 py-1.5 text-sm transition-colors",
+        "rounded-full border px-3.5 py-1.5 text-[13px] transition-colors",
         active
-          ? "border-primary bg-primary/5 text-foreground ring-1 ring-primary"
-          : "border-input text-muted-foreground hover:bg-muted",
+          ? "border-foreground/60 bg-card text-foreground"
+          : "border-transparent text-muted-foreground hover:text-foreground",
       )}
     >
       {children}
@@ -105,7 +105,7 @@ function GalleryCard({ profile }: { profile: GalleryProfile }) {
   return (
     <Link
       href={`/${profile.slug}`}
-      className="group flex flex-col overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-md"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-border/70 bg-card transition-shadow duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)]"
     >
       <div className="relative aspect-square overflow-hidden bg-muted">
         {image ? (
@@ -113,19 +113,19 @@ function GalleryCard({ profile }: { profile: GalleryProfile }) {
           <img
             src={image}
             alt={profile.name}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-2xl font-semibold text-muted-foreground">
+          <div className="flex h-full w-full items-center justify-center text-2xl font-medium text-muted-foreground">
             {profile.name.charAt(0)}
           </div>
         )}
-        <span className="absolute left-2 top-2 rounded-full bg-background/85 px-2 py-0.5 text-[11px] font-medium backdrop-blur">
+        <span className="absolute left-2 top-2 rounded-full bg-card/90 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground backdrop-blur">
           {professionLabel(profile.profession)}
         </span>
       </div>
-      <div className="flex flex-col gap-0.5 p-3">
-        <span className="truncate text-sm font-semibold">{profile.name}</span>
+      <div className="flex flex-col gap-0.5 p-3.5">
+        <span className="truncate text-sm font-[550]">{profile.name}</span>
         <span className="truncate text-xs text-muted-foreground">{profile.role_title}</span>
       </div>
     </Link>

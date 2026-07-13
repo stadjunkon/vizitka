@@ -74,8 +74,8 @@ export default async function PublicPage({
     <>
       <Nav />
       <ViewBeacon slug={slug} />
-      <div className="min-h-full bg-muted/30">
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10 sm:py-14">
+      <div className="min-h-full">
+        <div className="mx-auto flex w-full max-w-2xl flex-col gap-9 px-4 py-10 sm:py-14">
           {/* Шапка */}
           <header className="flex flex-col items-center gap-4 text-center">
             {profile.avatar_url && (
@@ -83,15 +83,17 @@ export default async function PublicPage({
               <img
                 src={profile.avatar_url}
                 alt={profile.name}
-                className="size-28 rounded-full object-cover ring-4 ring-background"
+                className="size-28 rounded-full object-cover shadow-[0_16px_44px_rgba(0,0,0,0.10)]"
               />
             )}
             <div className="flex flex-col gap-1">
-              <h1 className="text-2xl font-semibold tracking-tight">{profile.name}</h1>
-              <p className="text-muted-foreground">{profile.role_title}</p>
+              <h1 className="text-[23px] font-[550] tracking-[-0.01em]">{profile.name}</h1>
+              <p className="text-sm text-muted-foreground">{profile.role_title}</p>
             </div>
             {profile.tagline && (
-              <p className="max-w-md text-lg font-medium text-foreground/90">{profile.tagline}</p>
+              <p className="max-w-md text-[17px] font-medium leading-snug tracking-[-0.01em] text-foreground/90">
+                {profile.tagline}
+              </p>
             )}
             {bio && <p className="max-w-md text-sm leading-relaxed text-muted-foreground">{bio}</p>}
 
@@ -107,8 +109,8 @@ export default async function PublicPage({
                       rel="noopener noreferrer"
                       title={c.label}
                       aria-label={c.label}
-                      className="flex size-11 items-center justify-center rounded-full text-white transition-transform hover:scale-105"
-                      style={{ backgroundColor: c.brand }}
+                      className="flex size-11 items-center justify-center rounded-full border border-border/70 bg-card shadow-[0_6px_20px_rgba(0,0,0,0.05)] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(0,0,0,0.09)]"
+                      style={{ color: c.brand }}
                     >
                       <Icon className="size-5" />
                     </a>
@@ -122,9 +124,12 @@ export default async function PublicPage({
 
           {works.length > 0 && <PublicWorks works={works} layout={profile.layout} />}
 
-          <footer className="pt-4 text-center text-xs text-muted-foreground">
-            <a href="/" className="hover:underline">
-              Сделано на vizitka.me
+          <footer className="pt-6 text-center">
+            <a
+              href="/"
+              className="text-[11px] font-medium tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
+            >
+              СДЕЛАНО НА VIZITKA<sup className="text-[8px]">®</sup>
             </a>
           </footer>
         </div>
