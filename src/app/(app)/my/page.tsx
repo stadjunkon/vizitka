@@ -2,15 +2,24 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Pencil, ExternalLink, X } from "lucide-react";
+import { Pencil, ExternalLink, X, Eye } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { getMyVizitki, forgetVizitka, type MyVizitka } from "@/lib/my-vizitki";
 
 export default function MyPage() {
   const [items, setItems] = useState<MyVizitka[] | null>(null);
+  const [views, setViews] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    setItems(getMyVizitki());
+    const list = getMyVizitki();
+    setItems(list);
+    // подтягиваем счётчики просмотров по каждой визитке
+    list.forEach((v) => {
+      fetch(`/api/views/${v.slug}`)
+        .then((r) => r.json())
+        .then((d) => setViews((prev) => ({ ...prev, [v.slug]: d.views ?? 0 })))
+        .catch(() => {});
+    });
   }, []);
 
   function handleForget(token: string) {
@@ -47,6 +56,12 @@ export default function MyPage() {
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate font-medium">{v.name}</span>
                   <span className="truncate text-sm text-muted-foreground">{v.roleTitle}</span>
+                  {views[v.slug] !== undefined && (
+                    <span className="mt-0.5 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                      <Eye className="size-3" />
+                      {views[v.slug]}
+                    </span>
+                  )}
                 </div>
                 <Link
                   href={`/${v.slug}`}

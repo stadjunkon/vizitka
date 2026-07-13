@@ -5,6 +5,7 @@ import { getProfileBySlug, getWorksForProfile, workImages } from "@/lib/db";
 import { buildContacts } from "@/lib/contacts";
 import { Nav } from "@/components/nav";
 import { ShareButton } from "@/components/share-button";
+import { ViewBeacon } from "@/components/view-beacon";
 import { PublicWorks, type WorkView } from "@/components/public-works";
 
 export async function generateMetadata({
@@ -72,6 +73,7 @@ export default async function PublicPage({
   return (
     <>
       <Nav />
+      <ViewBeacon slug={slug} />
       <div className="min-h-full bg-muted/30">
         <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-10 sm:py-14">
           {/* Шапка */}

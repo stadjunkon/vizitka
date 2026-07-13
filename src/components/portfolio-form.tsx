@@ -12,14 +12,29 @@ import {
   Copy,
   ExternalLink,
   Eye,
+  GripVertical,
 } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { toast } from "sonner";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { ImageUpload } from "@/components/image-upload";
 import { MultiImageUpload } from "@/components/multi-image-upload";
 import { cn } from "@/lib/utils";
@@ -32,12 +47,17 @@ type Layout = ProfilePayload["layout"];
 type Profession = ProfilePayload["profession"];
 
 interface FormWork {
+  uid?: string; // локальный id для перетаскивания (не уходит на сервер)
   category: string;
   imageUrl: string;
   afterImageUrl: string;
   images: string[];
   descriptionRaw: string;
   descriptionPolished: string;
+}
+
+function uid(): string {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
 export interface PortfolioFormInitial extends Omit<ProfilePayload, "works"> {
@@ -49,6 +69,7 @@ interface PortfolioFormProps {
   token?: string;
   initial?: PortfolioFormInitial;
   initialSlug?: string;
+  views?: number;
 }
 
 const LAYOUTS: { value: Layout; title: string; desc: string }[] = [
@@ -59,6 +80,7 @@ const LAYOUTS: { value: Layout; title: string; desc: string }[] = [
 
 function emptyWork(): FormWork {
   return {
+    uid: uid(),
     category: "",
     imageUrl: "",
     afterImageUrl: "",
@@ -66,6 +88,11 @@ function emptyWork(): FormWork {
     descriptionRaw: "",
     descriptionPolished: "",
   };
+}
+
+/** Гарантирует uid у каждой работы (данные из БД приходят без него). */
+function withUids(state: PortfolioFormInitial): PortfolioFormInitial {
+  return { ...state, works: state.works.map((w) => ({ ...w, uid: w.uid || uid() })) };
 }
 
 function blankState(): PortfolioFormInitial {
@@ -95,9 +122,29 @@ function blankState(): PortfolioFormInitial {
   };
 }
 
-export function PortfolioForm({ mode, token, initial, initialSlug }: PortfolioFormProps) {
+function viewsWord(n: number): string {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return "просмотр";
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "просмотра";
+  return "просмотров";
+}
+
+export function PortfolioForm({ mode, token, initial, initialSlug, views }: PortfolioFormProps) {
   const router = useRouter();
-  const [form, setForm] = useState<PortfolioFormInitial>(initial ?? blankState());
+  const [form, setForm] = useState<PortfolioFormInitial>(() => withUids(initial ?? blankState()));
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+
+  function handleDragEnd(e: DragEndEvent) {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    setForm((prev) => {
+      const from = prev.works.findIndex((w) => w.uid === active.id);
+      const to = prev.works.findIndex((w) => w.uid === over.id);
+      if (from < 0 || to < 0) return prev;
+      return { ...prev, works: arrayMove(prev.works, from, to) };
+    });
+  }
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -246,6 +293,12 @@ export function PortfolioForm({ mode, token, initial, initialSlug }: PortfolioFo
         <p className="text-sm text-muted-foreground">
           Заполните тезисно — ИИ поможет оформить, а вы поправите финальный текст.
         </p>
+        {mode === "edit" && typeof views === "number" && (
+          <span className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-sm text-muted-foreground">
+            <Eye className="size-3.5" />
+            {views} {viewsWord(views)}
+          </span>
+        )}
       </div>
 
       {/* Профиль */}
@@ -351,69 +404,32 @@ export function PortfolioForm({ mode, token, initial, initialSlug }: PortfolioFo
         <CardHeader>
           <CardTitle>Работы</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-5">
-          {form.works.map((work, i) => (
-            <div key={i} className="flex flex-col gap-3">
-              {i > 0 && <Separator />}
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Работа {i + 1}
-                </span>
-                {form.works.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeWork(i)}
-                    className="h-7 text-muted-foreground"
-                  >
-                    <Trash2 className="size-3.5" />
-                    Удалить
-                  </Button>
-                )}
-              </div>
-
-              {form.layout === "before_after" ? (
-                <div className="grid grid-cols-2 gap-3">
-                  <ImageUpload
-                    value={work.imageUrl}
-                    onChange={(url) => updateWork(i, { imageUrl: url })}
-                    label="До"
+        <CardContent className="flex flex-col gap-4">
+          {form.works.length > 1 && (
+            <p className="text-xs text-muted-foreground">
+              Перетаскивайте работы за значок слева, чтобы менять порядок.
+            </p>
+          )}
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext
+              items={form.works.map((w) => w.uid ?? "")}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="flex flex-col gap-3">
+                {form.works.map((work, i) => (
+                  <SortableWork
+                    key={work.uid}
+                    work={work}
+                    index={i}
+                    total={form.works.length}
+                    layout={form.layout}
+                    onUpdate={(patch) => updateWork(i, patch)}
+                    onRemove={() => removeWork(i)}
                   />
-                  <ImageUpload
-                    value={work.afterImageUrl}
-                    onChange={(url) => updateWork(i, { afterImageUrl: url })}
-                    label="После"
-                  />
-                </div>
-              ) : (
-                <MultiImageUpload
-                  value={work.images}
-                  onChange={(urls) => updateWork(i, { images: urls })}
-                  label="Фото работы — можно несколько"
-                />
-              )}
-
-              <div className="flex flex-col gap-1.5">
-                <Label>Категория / тип работы</Label>
-                <Input
-                  value={work.category}
-                  onChange={(e) => updateWork(i, { category: e.target.value })}
-                  placeholder="Например: Маникюр с дизайном"
-                />
+                ))}
               </div>
-
-              <div className="flex flex-col gap-1.5">
-                <Label>Описание — тезисно</Label>
-                <Textarea
-                  value={work.descriptionRaw}
-                  onChange={(e) => updateWork(i, { descriptionRaw: e.target.value })}
-                  placeholder="что делали, материалы, сколько заняло — коротко"
-                  rows={2}
-                />
-              </div>
-            </div>
-          ))}
+            </SortableContext>
+          </DndContext>
 
           <Button type="button" variant="outline" onClick={addWork} className="self-start">
             <Plus className="size-4" />
@@ -553,6 +569,99 @@ export function PortfolioForm({ mode, token, initial, initialSlug }: PortfolioFo
           </Button>
         </div>
       )}
+    </div>
+  );
+}
+
+function SortableWork({
+  work,
+  index,
+  total,
+  layout,
+  onUpdate,
+  onRemove,
+}: {
+  work: FormWork;
+  index: number;
+  total: number;
+  layout: Layout;
+  onUpdate: (patch: Partial<FormWork>) => void;
+  onRemove: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: work.uid ?? "",
+  });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex flex-col gap-3 rounded-lg border bg-card p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            className="flex size-7 cursor-grab touch-none items-center justify-center rounded text-muted-foreground hover:bg-muted active:cursor-grabbing"
+            aria-label="Перетащить работу"
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical className="size-4" />
+          </button>
+          <span className="text-sm font-medium text-muted-foreground">Работа {index + 1}</span>
+        </div>
+        {total > 1 && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onRemove}
+            className="h-7 text-muted-foreground"
+          >
+            <Trash2 className="size-3.5" />
+            Удалить
+          </Button>
+        )}
+      </div>
+
+      {layout === "before_after" ? (
+        <div className="grid grid-cols-2 gap-3">
+          <ImageUpload value={work.imageUrl} onChange={(url) => onUpdate({ imageUrl: url })} label="До" />
+          <ImageUpload
+            value={work.afterImageUrl}
+            onChange={(url) => onUpdate({ afterImageUrl: url })}
+            label="После"
+          />
+        </div>
+      ) : (
+        <MultiImageUpload
+          value={work.images}
+          onChange={(urls) => onUpdate({ images: urls })}
+          label="Фото работы — можно несколько"
+        />
+      )}
+
+      <div className="flex flex-col gap-1.5">
+        <Label>Категория / тип работы</Label>
+        <Input
+          value={work.category}
+          onChange={(e) => onUpdate({ category: e.target.value })}
+          placeholder="Например: Маникюр с дизайном"
+        />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label>Описание — тезисно</Label>
+        <Textarea
+          value={work.descriptionRaw}
+          onChange={(e) => onUpdate({ descriptionRaw: e.target.value })}
+          placeholder="что делали, материалы, сколько заняло — коротко"
+          rows={2}
+        />
+      </div>
     </div>
   );
 }

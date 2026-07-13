@@ -58,6 +58,12 @@ export default async function EditPage({
   };
 
   return (
-    <PortfolioForm mode="edit" token={token} initial={initial} initialSlug={profile.slug} />
+    <PortfolioForm
+      mode="edit"
+      token={token}
+      initial={initial}
+      initialSlug={profile.slug}
+      views={profile.views}
+    />
   );
 }

@@ -26,6 +26,9 @@ function migrate(database: Database.Database) {
   if (!cols.includes("listed")) {
     database.exec("ALTER TABLE profiles ADD COLUMN listed INTEGER NOT NULL DEFAULT 1");
   }
+  if (!cols.includes("views")) {
+    database.exec("ALTER TABLE profiles ADD COLUMN views INTEGER NOT NULL DEFAULT 0");
+  }
   for (const c of ["viber", "odnoklassniki", "tiktok", "youtube", "facebook", "email", "website"]) {
     if (!cols.includes(c)) {
       database.exec(`ALTER TABLE profiles ADD COLUMN ${c} TEXT NOT NULL DEFAULT ''`);
@@ -75,6 +78,7 @@ const SCHEMA = `
     website TEXT NOT NULL DEFAULT '',
     published INTEGER NOT NULL DEFAULT 0,
     listed INTEGER NOT NULL DEFAULT 1,
+    views INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
@@ -146,6 +150,7 @@ export interface Profile {
   website: string;
   published: number;
   listed: number;
+  views: number;
   created_at: string;
   updated_at: string;
 }
@@ -224,6 +229,21 @@ export function getListedProfiles(): GalleryProfile[] {
        ORDER BY p.created_at DESC`,
     )
     .all() as GalleryProfile[];
+}
+
+export function incrementViews(slug: string): number {
+  db.prepare("UPDATE profiles SET views = views + 1 WHERE slug = ? AND published = 1").run(slug);
+  const row = db.prepare("SELECT views FROM profiles WHERE slug = ?").get(slug) as
+    | { views: number }
+    | undefined;
+  return row?.views ?? 0;
+}
+
+export function getViews(slug: string): number {
+  const row = db.prepare("SELECT views FROM profiles WHERE slug = ?").get(slug) as
+    | { views: number }
+    | undefined;
+  return row?.views ?? 0;
 }
 
 export function deleteProfileByToken(token: string): boolean {
