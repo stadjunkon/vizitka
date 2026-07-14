@@ -34,6 +34,9 @@ function migrate(database: Database.Database) {
       database.exec(`ALTER TABLE profiles ADD COLUMN ${c} TEXT NOT NULL DEFAULT ''`);
     }
   }
+  if (!cols.includes("recovery_email")) {
+    database.exec("ALTER TABLE profiles ADD COLUMN recovery_email TEXT NOT NULL DEFAULT ''");
+  }
   const workCols = (database.prepare("PRAGMA table_info(works)").all() as { name: string }[]).map(
     (c) => c.name,
   );
@@ -76,6 +79,7 @@ const SCHEMA = `
     facebook TEXT NOT NULL DEFAULT '',
     email TEXT NOT NULL DEFAULT '',
     website TEXT NOT NULL DEFAULT '',
+    recovery_email TEXT NOT NULL DEFAULT '',
     published INTEGER NOT NULL DEFAULT 0,
     listed INTEGER NOT NULL DEFAULT 1,
     views INTEGER NOT NULL DEFAULT 0,
@@ -148,6 +152,7 @@ export interface Profile {
   facebook: string;
   email: string;
   website: string;
+  recovery_email: string;
   published: number;
   listed: number;
   views: number;
@@ -244,6 +249,21 @@ export function getViews(slug: string): number {
     | { views: number }
     | undefined;
   return row?.views ?? 0;
+}
+
+/** Ищет edit_token по слагу визитки + приватному email восстановления (введённому при создании). */
+export function findEditTokenForRestore(slug: string, email: string): string | null {
+  const row = db
+    .prepare("SELECT edit_token, recovery_email FROM profiles WHERE slug = ?")
+    .get(slug) as { edit_token: string; recovery_email: string } | undefined;
+  if (!row || !row.recovery_email) return null;
+  if (row.recovery_email.trim().toLowerCase() !== email.trim().toLowerCase()) return null;
+  return row.edit_token;
+}
+
+/** Консистентный снимок БД (VACUUM INTO не блокирует текущие записи). */
+export function backupDatabaseTo(destPath: string): void {
+  db.prepare("VACUUM INTO ?").run(destPath);
 }
 
 export function deleteProfileByToken(token: string): boolean {

@@ -30,5 +30,6 @@ export interface ProfilePayload {
   facebook: string;
   email: string;
   website: string;
+  recoveryEmail: string;
   works: WorkPayload[];
 }

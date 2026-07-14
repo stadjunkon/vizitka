@@ -33,7 +33,10 @@ export default function MyPage() {
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold tracking-tight">Мои визитки</h1>
           <p className="text-sm text-muted-foreground">
-            Визитки, созданные в этом браузере. Список хранится только на этом устройстве.
+            Визитки, созданные в этом браузере. Список хранится только на этом устройстве.{" "}
+            <Link href="/restore" className="underline underline-offset-2 hover:text-foreground">
+              Потеряли ссылку для редактирования?
+            </Link>
           </p>
         </div>
 

@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
 import sharp from "sharp";
+import { rateLimitOrResponse } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -13,6 +14,9 @@ const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 const MAX_DIM = 1600;
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimitOrResponse(req, "upload", 40, 60 * 60 * 1000);
+  if (limited) return limited;
+
   const formData = await req.formData();
   const file = formData.get("file");
 

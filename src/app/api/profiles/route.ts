@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { db, slugify, uniqueSlug } from "@/lib/db";
+import { rateLimitOrResponse } from "@/lib/rate-limit";
 import type { ProfilePayload } from "@/lib/types";
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimitOrResponse(req, "profiles:create", 5, 60 * 60 * 1000);
+  if (limited) return limited;
+
   const body = (await req.json()) as ProfilePayload;
 
   if (!body.name?.trim() || !body.roleTitle?.trim()) {
@@ -19,10 +23,12 @@ export async function POST(req: NextRequest) {
       id, edit_token, slug, name, role_title, bio_raw, bio_polished, tagline,
       avatar_url, layout, profession, listed,
       phone, whatsapp, telegram, viber, vk, odnoklassniki, instagram, tiktok, youtube, facebook, email, website,
+      recovery_email,
       published
     ) VALUES (@id, @edit_token, @slug, @name, @role_title, @bio_raw, @bio_polished, @tagline,
       @avatar_url, @layout, @profession, @listed,
       @phone, @whatsapp, @telegram, @viber, @vk, @odnoklassniki, @instagram, @tiktok, @youtube, @facebook, @email, @website,
+      @recovery_email,
       1)
   `);
 
@@ -57,6 +63,7 @@ export async function POST(req: NextRequest) {
       facebook: body.facebook ?? "",
       email: body.email ?? "",
       website: body.website ?? "",
+      recovery_email: body.recoveryEmail ?? "",
     });
 
     body.works.forEach((w, i) => {

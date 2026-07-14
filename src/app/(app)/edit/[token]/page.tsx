@@ -35,6 +35,7 @@ export default async function EditPage({
     facebook: profile.facebook,
     email: profile.email,
     website: profile.website,
+    recoveryEmail: profile.recovery_email,
     works:
       works.length > 0
         ? works.map((w) => ({

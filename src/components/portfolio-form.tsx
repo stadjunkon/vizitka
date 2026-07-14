@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Eye,
   GripVertical,
+  Lock,
 } from "lucide-react";
 import {
   DndContext,
@@ -118,6 +119,7 @@ function blankState(): PortfolioFormInitial {
     facebook: "",
     email: "",
     website: "",
+    recoveryEmail: "",
     works: [emptyWork()],
   };
 }
@@ -435,6 +437,34 @@ export function PortfolioForm({ mode, token, initial, initialSlug, views }: Port
             <Plus className="size-4" />
             Добавить работу
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Восстановление доступа */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-1.5">
+            <Lock className="size-4 text-muted-foreground" />
+            Восстановление доступа
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-1.5">
+          <Label htmlFor="recoveryEmail">Приватный email для восстановления</Label>
+          <Input
+            id="recoveryEmail"
+            type="email"
+            value={form.recoveryEmail}
+            onChange={(e) => update("recoveryEmail", e.target.value)}
+            placeholder="you@mail.com"
+          />
+          <span className="text-xs text-muted-foreground">
+            Не показывается на странице визитки. Если потеряете ссылку для редактирования — по
+            адресу визитки и этому email сможете восстановить доступ на странице{" "}
+            <Link href="/restore" className="underline underline-offset-2">
+              /restore
+            </Link>
+            .
+          </span>
         </CardContent>
       </Card>
 

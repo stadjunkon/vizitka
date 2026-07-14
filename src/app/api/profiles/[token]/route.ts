@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 import { db, getProfileByToken, getWorksForProfile, deleteProfileByToken } from "@/lib/db";
+import { rateLimitOrResponse } from "@/lib/rate-limit";
 import type { ProfilePayload } from "@/lib/types";
 
 export async function GET(
@@ -20,6 +21,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ token: string }> }
 ) {
+  const limited = rateLimitOrResponse(req, "profiles:patch", 30, 60 * 60 * 1000);
+  if (limited) return limited;
+
   const { token } = await params;
   const profile = getProfileByToken(token);
   if (!profile) {
@@ -38,6 +42,7 @@ export async function PATCH(
       listed = @listed, phone = @phone, whatsapp = @whatsapp, telegram = @telegram,
       viber = @viber, vk = @vk, odnoklassniki = @odnoklassniki, instagram = @instagram,
       tiktok = @tiktok, youtube = @youtube, facebook = @facebook, email = @email, website = @website,
+      recovery_email = @recovery_email,
       updated_at = datetime('now')
     WHERE id = @id
   `);
@@ -72,6 +77,7 @@ export async function PATCH(
       facebook: body.facebook ?? "",
       email: body.email ?? "",
       website: body.website ?? "",
+      recovery_email: body.recoveryEmail ?? "",
     });
 
     deleteWorks.run(profile.id);

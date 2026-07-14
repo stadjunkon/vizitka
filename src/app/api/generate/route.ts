@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { rateLimitOrResponse } from "@/lib/rate-limit";
 
 interface WorkInput {
   category: string;
@@ -21,6 +22,9 @@ interface GenerateResult {
 }
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimitOrResponse(req, "generate", 15, 60 * 60 * 1000);
+  if (limited) return limited;
+
   const body = (await req.json()) as GenerateRequest;
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
