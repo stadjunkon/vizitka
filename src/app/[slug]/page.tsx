@@ -109,8 +109,13 @@ export default async function PublicPage({
                       rel="noopener noreferrer"
                       title={c.label}
                       aria-label={c.label}
-                      className="flex size-11 items-center justify-center rounded-full border border-border/70 bg-card shadow-[0_6px_20px_rgba(0,0,0,0.05)] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(0,0,0,0.09)]"
-                      style={{ color: c.brand }}
+                      className="flex size-11 items-center justify-center rounded-full border border-border/70 bg-card text-(--brand) shadow-[0_6px_20px_rgba(0,0,0,0.05)] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(0,0,0,0.09)] dark:text-(--brand-dark) dark:shadow-none dark:hover:bg-muted"
+                      style={
+                        {
+                          "--brand": c.brand,
+                          "--brand-dark": c.brandDark,
+                        } as React.CSSProperties
+                      }
                     >
                       <Icon className="size-5" />
                     </a>

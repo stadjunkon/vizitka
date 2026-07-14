@@ -40,7 +40,7 @@ export function GalleryGrid({ profiles }: { profiles: GalleryProfile[] }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Поиск по имени или роду занятий"
-            className="h-11 rounded-full border-transparent bg-card pl-11 shadow-[0_8px_28px_rgba(0,0,0,0.06)]"
+            className="h-11 rounded-full border-transparent bg-card pl-11 shadow-[0_8px_28px_rgba(0,0,0,0.06)] dark:border-white/10 dark:shadow-none"
           />
         </div>
 
@@ -105,7 +105,7 @@ function GalleryCard({ profile }: { profile: GalleryProfile }) {
   return (
     <Link
       href={`/${profile.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-border/70 bg-card transition-shadow duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)]"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-border/70 bg-card transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:hover:border-white/25 dark:hover:shadow-none"
     >
       <div className="relative aspect-square overflow-hidden bg-muted">
         {image ? (

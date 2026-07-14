@@ -1,10 +1,36 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Plus, FolderHeart } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Plus, FolderHeart, Sun, Moon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  return (
+    <button
+      type="button"
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+      aria-label="Переключить тему"
+      className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+    >
+      {/* до маунта тема неизвестна — рисуем нейтральную иконку, чтобы не ловить гидрацию */}
+      {!mounted ? (
+        <Sun className="size-4 opacity-0" />
+      ) : resolvedTheme === "dark" ? (
+        <Sun className="size-4" />
+      ) : (
+        <Moon className="size-4" />
+      )}
+    </button>
+  );
+}
 
 export function Wordmark({ className }: { className?: string }) {
   return (
@@ -20,12 +46,13 @@ export function Nav() {
 
   return (
     <header className="sticky top-4 z-40 px-4">
-      <div className="mx-auto flex h-13 w-full max-w-xl items-center justify-between gap-3 rounded-full bg-card py-2 pl-5 pr-2 shadow-[0_12px_40px_rgba(0,0,0,0.09),0_2px_8px_rgba(0,0,0,0.04)]">
+      <div className="mx-auto flex h-13 w-full max-w-xl items-center justify-between gap-3 rounded-full border border-transparent bg-card py-2 pl-5 pr-2 shadow-[0_12px_40px_rgba(0,0,0,0.09),0_2px_8px_rgba(0,0,0,0.04)] dark:border-white/10 dark:shadow-none">
         <Link href="/" aria-label="На главную">
           <Wordmark />
         </Link>
 
         <nav className="flex items-center gap-1">
+          <ThemeToggle />
           <Link
             href="/my"
             className={cn(
